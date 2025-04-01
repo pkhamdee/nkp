@@ -1,0 +1,146 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: test
+  namespace: non-production-ndxrj-qbhvf
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+    services:
+      cidrBlocks:
+      - 10.96.0.0/12
+  controlPlaneEndpoint:
+    host: 10.38.9.141
+    port: 6443
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: test-8rhz8
+    namespace: non-production-ndxrj-qbhvf
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: NutanixCluster
+    name: test-49hxm
+    namespace: non-production-ndxrj-qbhvf
+  topology:
+    class: nkp-nutanix-v2.14.0
+    controlPlane:
+      metadata: {}
+      replicas: 1
+    variables:
+    - name: clusterConfig
+      value:
+        addons:
+          ccm:
+            credentials:
+              secretRef:
+                name: test-pc-credentials
+            strategy: HelmAddon
+          clusterAutoscaler:
+            strategy: HelmAddon
+          cni:
+            provider: Cilium
+            strategy: HelmAddon
+          cosi:
+            strategy: HelmAddon
+          csi:
+            defaultStorage:
+              provider: nutanix
+              storageClassConfig: volume
+            providers:
+              nutanix:
+                credentials:
+                  secretRef:
+                    name: test-pc-credentials-for-csi
+                storageClassConfigs:
+                  volume:
+                    allowExpansion: true
+                    parameters:
+                      csi.storage.k8s.io/fstype: ext4
+                      description: CSI StorageClass nutanix-volume for test
+                      hypervisorAttached: ENABLED
+                      storageContainer: default
+                      storageType: NutanixVolumes
+                    reclaimPolicy: Delete
+                    volumeBindingMode: WaitForFirstConsumer
+                strategy: HelmAddon
+            snapshotController:
+              strategy: HelmAddon
+          nfd:
+            strategy: HelmAddon
+          serviceLoadBalancer:
+            configuration:
+              addressRanges:
+              - end: 10.38.9.179
+                start: 10.38.9.174
+            provider: MetalLB
+        controlPlane:
+          nutanix:
+            machineDetails:
+              bootType: uefi
+              cluster:
+                name: PHX-SPOC009-3
+                type: name
+              image:
+                name: nkp-rocky-9.5-release-1.31.4-20250214003015.qcow2
+                type: name
+              memorySize: 16Gi
+              subnets:
+              - name: primary-PHX-SPOC009-3
+                type: name
+              systemDiskSize: 80Gi
+              vcpuSockets: 4
+              vcpusPerSocket: 1
+        encryptionAtRest:
+          providers:
+          - secretbox: {}
+        globalImageRegistryMirror:
+          url: http://registry.nutanixdemo.com/docker.io
+        nutanix:
+          controlPlaneEndpoint:
+            host: 10.38.9.141
+            port: 6443
+            virtualIP:
+              provider: KubeVIP
+          prismCentralEndpoint:
+            credentials:
+              secretRef:
+                name: test-pc-credentials
+            insecure: true
+            url: https://10.38.9.138:9440
+        users:
+        - name: pongsak
+          sshAuthorizedKeys:
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDFvgAQaylZEeZXvGGFUFA+icWnO2ykwDVw3KuORv55BXQ86Ra0bsJoY6yMGQGLZw0jBWQ69SkG8ezizbqFju1L7miwS+e4bDfuMxN5nYn+fNE/DsKpex9j0mppYhIyW/dScrcGj+DiKis8E+bCTswCIoqOhAO4cfM6OHI488uMMI2TUDDZpswMytW77ZL1CG6A+N/28Vfyw8azzFlwKOBJFkuAsXswwmt90AlUgB3GHadOj3vboyRmW/4oPc9L4oaKJhL9i3+ZLpvJHsIbUnvvrpBS+DIX8kb2+Dp1+5iCK7qo9quiLaaMPGzZCBdyT9oiGLjF8/ldI9CGaoKFSBU99uUUqKO8V3zpujbzd05jb65FNPzFMNcklJw5s1UVpkAp11HMCS++gMum79z3+WDTEH/ckoZvVWQmvvK52xxtF6fxp/akMTBXX2t/zi2/Xd0x3Dy4RRMd3Pm3AasRfX0Wy6YO59Iuc7vYIkTUCS0wU/hREx8qBHbpVBJ4CzGybkEu4bu9J1+nZfwN0cisESp7L5ksZzH2aRGVC6RvMC2b5URl5rP7pJ2uMBIJxR9XoUyBbecEEsEcy6r61KG0P/u7FYDNJIlUbrlZ4zsvlKAOppqTU/sdA5yPvqkh45neGvnhEs+xZf1VwUxa+pkjxHCdkthAcsCxRzzCSlBolC7u0w==
+          sudo: ALL=(ALL) NOPASSWD:ALL
+    version: v1.31.4
+    workers:
+      machineDeployments:
+      - class: default-worker
+        metadata:
+          annotations:
+            cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "2"
+            cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "2"
+        name: md-0
+        variables:
+          overrides:
+          - name: workerConfig
+            value:
+              nutanix:
+                machineDetails:
+                  bootType: uefi
+                  cluster:
+                    name: PHX-SPOC009-3
+                    type: name
+                  image:
+                    name: nkp-rocky-9.5-release-1.31.4-20250214003015.qcow2
+                    type: name
+                  memorySize: 32Gi
+                  subnets:
+                  - name: primary-PHX-SPOC009-3
+                    type: name
+                  systemDiskSize: 80Gi
+                  vcpuSockets: 8
+                  vcpusPerSocket: 1
