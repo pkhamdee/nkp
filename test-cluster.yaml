@@ -1,0 +1,187 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  annotations:
+    caren.nutanix.com/cluster-uuid: 0195f021-9101-7df1-a5c0-d7e63eba0fd1
+  labels:
+    cluster.x-k8s.io/provider: nutanix
+    konvoy.d2iq.io/cluster-name: test
+    konvoy.d2iq.io/provider: nutanix
+  name: test
+  namespace: non-production-ndxrj-qbhvf
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+    services:
+      cidrBlocks:
+      - 10.96.0.0/12
+  controlPlaneEndpoint:
+    host: ""
+    port: 0
+  topology:
+    class: nkp-nutanix-v2.14.0
+    controlPlane:
+      metadata: {}
+      replicas: 1
+    variables:
+    - name: clusterConfig
+      value:
+        addons:
+          ccm:
+            credentials:
+              secretRef:
+                name: test-pc-credentials
+            strategy: HelmAddon
+          clusterAutoscaler:
+            strategy: HelmAddon
+          cni:
+            provider: Cilium
+            strategy: HelmAddon
+          cosi:
+            strategy: HelmAddon
+          csi:
+            defaultStorage:
+              provider: nutanix
+              storageClassConfig: volume
+            providers:
+              nutanix:
+                credentials:
+                  secretRef:
+                    name: test-pc-credentials-for-csi
+                storageClassConfigs:
+                  volume:
+                    allowExpansion: true
+                    parameters:
+                      csi.storage.k8s.io/fstype: ext4
+                      description: CSI StorageClass nutanix-volume for test
+                      flashMode: DISABLED
+                      hypervisorAttached: ENABLED
+                      storageContainer: default
+                      storageType: NutanixVolumes
+                    reclaimPolicy: Delete
+                    volumeBindingMode: WaitForFirstConsumer
+                strategy: HelmAddon
+            snapshotController:
+              strategy: HelmAddon
+          nfd:
+            strategy: HelmAddon
+          serviceLoadBalancer:
+            configuration:
+              addressRanges:
+              - end: 10.38.9.179
+                start: 10.38.9.174
+            provider: MetalLB
+        controlPlane:
+          nutanix:
+            machineDetails:
+              bootType: uefi
+              cluster:
+                name: PHX-SPOC009-3
+                type: name
+              image:
+                name: nkp-rocky-9.5-release-1.31.4-20250214003015.qcow2
+                type: name
+              memorySize: 16Gi
+              subnets:
+              - name: primary-PHX-SPOC009-3
+                type: name
+              systemDiskSize: 80Gi
+              vcpuSockets: 4
+              vcpusPerSocket: 1
+        dns:
+          coreDNS: {}
+        encryptionAtRest:
+          providers:
+          - secretbox: {}
+        globalImageRegistryMirror:
+          credentials:
+            secretRef:
+              name: test-image-registry-mirror-credentials
+          url: https://registry.nutanixdemo.com/docker.io
+        nutanix:
+          controlPlaneEndpoint:
+            host: 10.38.9.141
+            port: 6443
+            virtualIP:
+              provider: KubeVIP
+          prismCentralEndpoint:
+            credentials:
+              secretRef:
+                name: test-pc-credentials
+            insecure: true
+            url: https://10.38.9.138:9440
+        users:
+        - name: konvoy
+          sshAuthorizedKeys:
+          - |
+            ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDFvgAQaylZEeZXvGGFUFA+icWnO2ykwDVw3KuORv55BXQ86Ra0bsJoY6yMGQGLZw0jBWQ69SkG8ezizbqFju1L7miwS+e4bDfuMxN5nYn+fNE/DsKpex9j0mppYhIyW/dScrcGj+DiKis8E+bCTswCIoqOhAO4cfM6OHI488uMMI2TUDDZpswMytW77ZL1CG6A+N/28Vfyw8azzFlwKOBJFkuAsXswwmt90AlUgB3GHadOj3vboyRmW/4oPc9L4oaKJhL9i3+ZLpvJHsIbUnvvrpBS+DIX8kb2+Dp1+5iCK7qo9quiLaaMPGzZCBdyT9oiGLjF8/ldI9CGaoKFSBU99uUUqKO8V3zpujbzd05jb65FNPzFMNcklJw5s1UVpkAp11HMCS++gMum79z3+WDTEH/ckoZvVWQmvvK52xxtF6fxp/akMTBXX2t/zi2/Xd0x3Dy4RRMd3Pm3AasRfX0Wy6YO59Iuc7vYIkTUCS0wU/hREx8qBHbpVBJ4CzGybkEu4bu9J1+nZfwN0cisESp7L5ksZzH2aRGVC6RvMC2b5URl5rP7pJ2uMBIJxR9XoUyBbecEEsEcy6r61KG0P/u7FYDNJIlUbrlZ4zsvlKAOppqTU/sdA5yPvqkh45neGvnhEs+xZf1VwUxa+pkjxHCdkthAcsCxRzzCSlBolC7u0w==
+          sudo: ALL=(ALL) NOPASSWD:ALL
+    version: v1.31.4
+    workers:
+      machineDeployments:
+      - class: default-worker
+        metadata:
+          annotations:
+            cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "2"
+            cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "2"
+        name: md-0
+        variables:
+          overrides:
+          - name: workerConfig
+            value:
+              nutanix:
+                machineDetails:
+                  bootType: uefi
+                  cluster:
+                    name: PHX-SPOC009-3
+                    type: name
+                  image:
+                    name: nkp-rocky-9.5-release-1.31.4-20250214003015.qcow2
+                    type: name
+                  memorySize: 32Gi
+                  subnets:
+                  - name: primary-PHX-SPOC009-3
+                    type: name
+                  systemDiskSize: 80Gi
+                  vcpuSockets: 8
+                  vcpusPerSocket: 1
+---
+apiVersion: v1
+data:
+  credentials: WwogICAgewogICAgICAgICJ0eXBlIjogImJhc2ljX2F1dGgiLAogICAgICAgICJkYXRhIjogewogICAgICAgICAgICAicHJpc21DZW50cmFsIjogewogICAgICAgICAgICAgICAgInVzZXJuYW1lIjogImFkbWluIiwKICAgICAgICAgICAgICAgICJwYXNzd29yZCI6ICJueDJUZWNoMzU5ISIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KXQ==
+kind: Secret
+metadata:
+  labels:
+    cluster.x-k8s.io/provider: nutanix
+    konvoy.d2iq.io/cluster-name: test
+    konvoy.d2iq.io/provider: nutanix
+  name: test-pc-credentials
+  namespace: non-production-ndxrj-qbhvf
+type: Opaque
+---
+apiVersion: v1
+data:
+  key: MTAuMzguOS4xMzg6OTQ0MDphZG1pbjpueDJUZWNoMzU5IQ==
+kind: Secret
+metadata:
+  labels:
+    cluster.x-k8s.io/provider: nutanix
+    konvoy.d2iq.io/cluster-name: test
+    konvoy.d2iq.io/provider: nutanix
+  name: test-pc-credentials-for-csi
+  namespace: non-production-ndxrj-qbhvf
+type: Opaque
+---
+apiVersion: v1
+data:
+  ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUR3VENDQTBpZ0F3SUJBZ0lTQlpxMElLaGs0SEUrU1pPYkhXakFOem8xTUFvR0NDcUdTTTQ5QkFNRE1ESXgKQ3pBSkJnTlZCQVlUQWxWVE1SWXdGQVlEVlFRS0V3MU1aWFFuY3lCRmJtTnllWEIwTVFzd0NRWURWUVFERXdKRgpOVEFlRncweU5UQXpNalF3TnpRNU16SmFGdzB5TlRBMk1qSXdOelE1TXpGYU1DTXhJVEFmQmdOVkJBTVRHSEpsCloybHpkSEo1TG01MWRHRnVhWGhrWlcxdkxtTnZiVEJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUEKQkt5ZVNnMGd6bTRweXpLQi9EN2hSOThtaTFYZ2RESzZBV05XZmZSN2JrKzFUN3VRTGgvSVRoWGxOM0JSNU0yZApYWWRFTks4Zks5SW9VeXNpNmNaYXI3R2pnZ0pMTUlJQ1J6QU9CZ05WSFE4QkFmOEVCQU1DQjRBd0hRWURWUjBsCkJCWXdGQVlJS3dZQkJRVUhBd0VHQ0NzR0FRVUZCd01DTUF3R0ExVWRFd0VCL3dRQ01BQXdIUVlEVlIwT0JCWUUKRkN0VHNtSnNaaU5YU3Y3MnJWVnNVVllXQVJnUk1COEdBMVVkSXdRWU1CYUFGSjhyWDg4OElVK2RCTGZ0S3l6RQp4bkNMMHRjTk1GVUdDQ3NHQVFVRkJ3RUJCRWt3UnpBaEJnZ3JCZ0VGQlFjd0FZWVZhSFIwY0RvdkwyVTFMbTh1CmJHVnVZM0l1YjNKbk1DSUdDQ3NHQVFVRkJ6QUNoaFpvZEhSd09pOHZaVFV1YVM1c1pXNWpjaTV2Y21jdk1DTUcKQTFVZEVRUWNNQnFDR0hKbFoybHpkSEo1TG01MWRHRnVhWGhrWlcxdkxtTnZiVEFUQmdOVkhTQUVEREFLTUFnRwpCbWVCREFFQ0FUQXRCZ05WSFI4RUpqQWtNQ0tnSUtBZWhoeG9kSFJ3T2k4dlpUVXVZeTVzWlc1amNpNXZjbWN2Ck5UUXVZM0pzTUlJQkJnWUtLd1lCQkFIV2VRSUVBZ1NCOXdTQjlBRHlBSGNBRGVIeU1DdlREY0ZBWWhJSjZsVXUKL0VkMGZMSFg2VER2RGtJZXRINU9xalFBQUFHVngxWmpSd0FBQkFNQVNEQkdBaUVBOEJ3TExRbWwvb1cybFpFZQpmaVJocnU4UXAwYkdwdTIzdmtQdTJ5QXcvcjBDSVFDMitWcDVSVXRadGx2SE1qMHk1OTlSWFRuazNFMEhxYjhaCm9tRUpHbVVNd2dCM0FNejdEMnFGY1FsbC9wV2JVODdwc253aTZZVmNEWmVOdHFsK1ZNRCtUQTJ3QUFBQmxjZFcKWTFvQUFBUURBRWd3UmdJaEFJZTYxMUMxMGpiWG44bUwrT2xGY05QSDMrR1hhTHd3b20ycExPZkZKSmVCQWlFQQpxMEZSSG5CZTJsUEhFREN6azNyb2ZHQ0hhdGMvVC9JMU9jZVp3OC8vSjhnd0NnWUlLb1pJemowRUF3TURad0F3ClpBSXdiZ0pKT2t5bTB6Q2pJZ2RQUTRDWTV5emNqUko0aCtwQmoxSHNqbXlsMGg3cGRCajNMQmJGOUVLMC94L2cKbTZ5dUFqQkFGNTU0MEkvQmJqU21lNUlqSGRZc3RINWdYS3NTUG1GeVcxSUNHb2J0VkNoSytpemJNRlNGeW13QQpPbFhoWldvPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t
+kind: Secret
+metadata:
+  labels:
+    cluster.x-k8s.io/cluster-name: test
+    clusterctl.cluster.x-k8s.io/move: ""
+  name: test-image-registry-mirror-credentials
+  namespace: non-production-ndxrj-qbhvf
+type: Opaque
